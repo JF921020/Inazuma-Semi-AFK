@@ -1,0 +1,166 @@
+{
+  "capture_region": null,
+  "loop_interval_ms": 250,
+  "stop_key": "F8",
+  "debug": true,
+  "scenes": [
+    {
+      "name": "find_level",
+      "template": "templates/find_level.png",
+      "threshold": 0.9,
+      "cooldown_ms": 1500,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "choose_level",
+      "template": "templates/choose_level.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "repeat",
+          "times": 4,
+          "delay_ms": 120,
+          "actions": [
+            {
+              "type": "press",
+              "key": "down"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "get_level",
+      "template": "templates/get_level.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "start_game",
+      "template": "templates/start_game.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "start_question",
+      "template": "templates/start_question.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "VS",
+      "template": "templates/VS.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "next",
+      "template": "templates/next.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "press",
+          "key": "enter"
+        }
+      ]
+    },
+    {
+      "name": "end_team",
+      "template": "templates/end_team.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "keyDown",
+          "key": "alt"
+        },
+        {
+          "type": "sleep",
+          "ms": 120
+        },
+        {
+          "type": "keyUp",
+          "key": "alt"
+        }
+      ]
+    },
+    {
+      "name": "kick",
+      "template": "templates/kick.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "click",
+          "button": "left"
+        },
+        {
+          "type": "sleep",
+          "ms": 500
+        },
+        {
+          "type": "press",
+          "key": "u"
+        }
+      ]
+    }
+  ]
+}
