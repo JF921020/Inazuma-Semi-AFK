@@ -141,3 +141,30 @@ python main.py
 - `afkbot/vision.py`: 截圖、區域換算與模板比對
 - `afkbot/actions.py`: 按鍵與延遲動作執行
 - `afkbot/engine.py`: 主循環、監控狀態與規則觸發
+
+## 可攜式執行環境
+
+如果你想把專案帶到新電腦上執行，但又不想每次重新安裝套件，可以先在目前這台電腦建立可攜式 Python 環境：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build_portable_runtime.ps1
+```
+
+建立完成後會產生 `portable_runtime/`。之後把這些內容一起帶到新電腦：
+
+- 專案原始碼
+- `config.json`
+- `templates/`
+- `portable_runtime/`
+
+啟動方式：
+
+- 雙擊 `start_portable.bat`
+- 或直接雙擊 `start_bot.bat`，它會優先使用 `portable_runtime/`
+
+注意：
+
+- 這種可攜包適合同樣是 Windows 64-bit 的電腦
+- 如果你之後有新增套件，記得重新跑一次 `build_portable_runtime.ps1`
+
+若你要用 GitHub 在其他電腦部署，流程整理在 [DEPLOY.md](/C:/Users/user/Desktop/Inazuma-Semi-AFK/DEPLOY.md)。
