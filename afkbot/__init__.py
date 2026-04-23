@@ -1,0 +1,1 @@
+"""Semi-AFK bot package."""

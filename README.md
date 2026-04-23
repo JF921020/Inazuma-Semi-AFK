@@ -1,19 +1,33 @@
 # Inazuma Semi AFK
 
-一個以畫面辨識為基礎的半自動按鍵工具雛形。
+一個以畫面辨識為基礎的半自動按鍵工具。
 
-它的核心流程是：
+現在的使用流程是：
 
-1. 擷取指定螢幕區域
-2. 用模板圖片比對目前畫面
-3. 命中規則後執行按鍵操作
-4. 依冷卻時間避免重複觸發
+1. 先自行準備好遊戲畫面的模板圖片
+2. 把圖片放進 `templates/`
+3. 在 `config.json` 設定每張圖對應的按鍵
+4. 執行程式後持續監看螢幕
+5. 畫面中出現指定模板時自動按下對應按鍵
+
+如果你只是先測試程式能不能跑，`scenes` 可以先留空，這樣程式會正常啟動待機，但不會讀取任何圖片。
+
+目前範例已經內建第一條規則：
+
+- 讀取 `templates/find_level.png`
+- 畫面命中後按下 `Enter`
+- `find_level` 目前使用 `template` 模式，適合用裁切後的小圖做比對
+
+你也可以像目前設定這樣，把多條規則串起來，例如：
+
+- 讀到 `find_level` 後按 `Enter`
+- 讀到 `choose_level` 後連按四次 `Down`
 
 ## 適合的用途
 
-- 根據固定 UI 圖示自動補血
 - 偵測「可互動」提示後自動按鍵
-- 偵測戰鬥結束或確認視窗後自動處理
+- 偵測確認按鈕或結算畫面後自動處理
+- 偵測固定 UI 圖示後執行技能、補血或切換流程
 
 ## 先決條件
 
@@ -35,37 +49,21 @@ Copy-Item config.example.json config.json
 python main.py
 ```
 
-預設停止熱鍵是 `F8`。
+啟動後程式會先進入待機模式，不會立刻開始監控。
+
+- `Alt+1`: 開始監控
+- `Alt+0`: 停止監控，但不退出程式
+- `F8`: 結束整個程式
 
 如果你想直接雙擊啟動，也可以使用：
 
 - `start_bot.bat`: 啟動主程式
-- `capture_template.bat`: 啟動截圖取樣工具
-
-## 截圖取樣工具
-
-你可以先用工具把遊戲 UI 裁成模板圖：
-
-```powershell
-python capture_tool.py --name battle_ready
-```
-
-流程如下：
-
-1. 先把遊戲畫面切到前景
-2. 執行工具後等待 3 秒倒數
-3. 工具會截取主螢幕並跳出框選視窗
-4. 用滑鼠框選要辨識的 UI 小區塊
-5. 按 Enter 存檔，按 `C` 取消
-
-若不指定 `--name`，工具會自動用時間命名。輸出位置預設在 `templates/`。
-存檔後，工具也會同步印出一段可直接貼進 `config.json` 的 `capture_region` JSON。
 
 ## 設定方式
 
 主要設定在 `config.json`：
 
-- `capture_region`: 要截圖辨識的畫面範圍
+- `capture_region`: 基礎偵測範圍，設成 `null` 代表監看整個主螢幕
 - `loop_interval_ms`: 每輪偵測間隔
 - `stop_key`: 停止程式的熱鍵
 - `debug`: 是否輸出偵測分數
@@ -77,6 +75,9 @@ python capture_tool.py --name battle_ready
 - `template`: 模板圖片路徑
 - `threshold`: 命中門檻，通常 `0.85 ~ 0.97`
 - `cooldown_ms`: 觸發後冷卻
+- `search_region`: 只在基礎偵測區域中的局部範圍搜尋，設成 `null` 代表整個基礎區域
+- `match_mode`: `template` 或 `exact_frame`
+- `pixel_tolerance`: `exact_frame` 模式下允許的單像素亮度誤差
 - `actions`: 命中後要做的事情
 
 支援的 `actions`：
@@ -86,9 +87,30 @@ python capture_tool.py --name battle_ready
 - `keyUp`: 放開
 - `sleep`: 暫停幾毫秒
 
-## 模板圖片怎麼做
+`match_mode` 說明：
 
-把遊戲中你想辨識的 UI 截一小塊圖，放到 `templates/` 目錄。
+- `template`: 適合用小型 UI 圖片在大畫面中搜尋
+- `exact_frame`: 適合整張畫面幾乎固定不變，而且你想排除相似畫面的情況
+
+`actions` 也支援 `repeat`，適合重複按鍵流程，例如連按四次 `down`：
+
+```json
+{
+  "type": "repeat",
+  "times": 4,
+  "delay_ms": 120,
+  "actions": [
+    {
+      "type": "press",
+      "key": "down"
+    }
+  ]
+}
+```
+
+## 模板圖片準備方式
+
+先用任何你習慣的截圖工具，把遊戲中你想辨識的 UI 小區塊截下來，放到 `templates/` 目錄。
 
 建議：
 
@@ -96,6 +118,7 @@ python capture_tool.py --name battle_ready
 - 不要截太大
 - 盡量避開會閃爍、會動態變化的元素
 - 若誤判高，改小截圖範圍或提高 `threshold`
+- 若效能不夠，優先為該規則設定 `search_region`
 
 ## 實務建議
 
@@ -105,7 +128,16 @@ python capture_tool.py --name battle_ready
 
 ## 下一步可以擴充
 
-- 指定每個模板只在局部區域搜尋，提升速度與準確率
 - 加入顏色檢測或 OCR
 - 加入「狀態機」避免不同場景互相搶按鍵
-- 加入錄圖工具，直接框選螢幕生成模板
+- 加入前景視窗檢查，只在遊戲視窗位於前景時才動作
+
+## 專案結構
+
+- `main.py`: 程式入口，只負責載入設定並啟動引擎
+- `afkbot/config.py`: 讀取與解析 `config.json`
+- `afkbot/models.py`: 設定與規則資料模型
+- `afkbot/hotkeys.py`: 熱鍵判斷與防重複觸發
+- `afkbot/vision.py`: 截圖、區域換算與模板比對
+- `afkbot/actions.py`: 按鍵與延遲動作執行
+- `afkbot/engine.py`: 主循環、監控狀態與規則觸發
