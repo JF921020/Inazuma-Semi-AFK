@@ -37,6 +37,11 @@ python main.py
 
 預設停止熱鍵是 `F8`。
 
+如果你想直接雙擊啟動，也可以使用：
+
+- `start_bot.bat`: 啟動主程式
+- `capture_template.bat`: 啟動截圖取樣工具
+
 ## 截圖取樣工具
 
 你可以先用工具把遊戲 UI 裁成模板圖：
@@ -54,6 +59,7 @@ python capture_tool.py --name battle_ready
 5. 按 Enter 存檔，按 `C` 取消
 
 若不指定 `--name`，工具會自動用時間命名。輸出位置預設在 `templates/`。
+存檔後，工具也會同步印出一段可直接貼進 `config.json` 的 `capture_region` JSON。
 
 ## 設定方式
 

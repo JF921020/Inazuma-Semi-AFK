@@ -1,4 +1,5 @@
 import argparse
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -64,8 +65,17 @@ def main() -> None:
     if not cv2.imwrite(str(output_path), crop):
         raise RuntimeError(f"無法寫入模板圖片: {output_path}")
 
+    region_json = {
+        "left": x,
+        "top": y,
+        "width": w,
+        "height": h,
+    }
+
     print(f"模板已儲存: {output_path}")
     print(f"區域座標: left={x}, top={y}, width={w}, height={h}")
+    print("可直接貼到 config.json 的 capture_region:")
+    print(json.dumps(region_json, indent=2, ensure_ascii=False))
 
 
 if __name__ == "__main__":
