@@ -161,6 +161,21 @@
           "key": "u"
         }
       ]
+    },
+    {
+      "name": "rekick",
+      "template": "templates/rekick.png",
+      "threshold": 0.9,
+      "cooldown_ms": 2000,
+      "search_region": null,
+      "match_mode": "template",
+      "pixel_tolerance": 8,
+      "actions": [
+        {
+          "type": "click",
+          "button": "right"
+        }
+      ]
     }
   ]
 }

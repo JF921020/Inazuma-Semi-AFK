@@ -4,3 +4,4 @@ __pycache__/
 debug/
 portable_runtime/
 dist/
+portable_runtime.zip
