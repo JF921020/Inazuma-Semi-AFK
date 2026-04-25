@@ -1,4 +1,5 @@
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 import mss
@@ -17,6 +18,10 @@ from afkbot.vision import (
 )
 
 
+LogCallback = Callable[[str], None]
+StateCallback = Callable[[bool], None]
+
+
 class TemplateCache:
     def __init__(self) -> None:
         self._templates: dict[str, np.ndarray] = {}
@@ -32,60 +37,95 @@ class TemplateCache:
 
 
 class BotEngine:
-    def __init__(self, config: AppConfig) -> None:
+    def __init__(
+        self,
+        config: AppConfig,
+        log: LogCallback | None = None,
+        on_monitoring_changed: StateCallback | None = None,
+    ) -> None:
         self.config = config
         self.templates = TemplateCache()
         self.last_trigger_times: dict[str, float] = {}
         self.start_hotkey = HotkeyLatch("ALT", "1")
         self.pause_hotkey = HotkeyLatch("ALT", "0")
         self.is_monitoring = False
+        self._stop_requested = False
+        self._log_callback = log or print
+        self._on_monitoring_changed = on_monitoring_changed
 
     def run(self) -> None:
-        with mss.mss() as sct:
-            base_region = resolve_capture_region(sct, self.config.capture_region)
-            self._print_startup(base_region)
+        self._stop_requested = False
+        try:
+            with mss.mss() as sct:
+                base_region = resolve_capture_region(sct, self.config.capture_region)
+                self._print_startup(base_region)
 
-            while True:
-                if is_key_pressed(self.config.stop_key):
-                    print("收到停止指令，程式結束。")
-                    break
+                while not self._stop_requested:
+                    if is_key_pressed(self.config.stop_key):
+                        self.log(f"{self.config.stop_key} pressed. Stopping bot.")
+                        break
 
-                self._update_monitor_state()
-                if not self.is_monitoring:
+                    self._update_monitor_state()
+                    if not self.is_monitoring:
+                        time.sleep(self.config.loop_interval_ms / 1000)
+                        continue
+
+                    self._process_scenes(sct, base_region)
                     time.sleep(self.config.loop_interval_ms / 1000)
-                    continue
+        finally:
+            self.set_monitoring(False)
+            self.log("Bot engine stopped.")
 
-                self._process_scenes(sct, base_region)
-                time.sleep(self.config.loop_interval_ms / 1000)
+    def start_monitoring(self) -> None:
+        self.set_monitoring(True)
+
+    def pause_monitoring(self) -> None:
+        self.set_monitoring(False)
+
+    def request_stop(self) -> None:
+        self._stop_requested = True
+        self.set_monitoring(False)
+
+    def set_monitoring(self, enabled: bool) -> None:
+        if self.is_monitoring == enabled:
+            return
+        self.is_monitoring = enabled
+        self.log("Monitoring started." if enabled else "Monitoring paused.")
+        if self._on_monitoring_changed is not None:
+            self._on_monitoring_changed(enabled)
+
+    def log(self, message: str) -> None:
+        self._log_callback(message)
 
     def _print_startup(self, base_region: dict[str, int]) -> None:
-        print("半自動掛機啟動中...")
-        print(f"基礎偵測區域: {base_region}")
-        print("開始監控熱鍵: ALT+1")
-        print("停止監控熱鍵: ALT+0")
-        print(f"停止熱鍵: {self.config.stop_key}")
-        print("目前狀態: 待機中")
+        self.log("Bot engine ready.")
+        self.log(f"Capture region: {base_region}")
+        self.log("Start hotkey: ALT+1")
+        self.log("Pause hotkey: ALT+0")
+        self.log(f"Stop hotkey: {self.config.stop_key}")
+        self.log("Waiting for start command.")
 
         if not self.config.scenes:
-            print("目前沒有任何偵測規則，程式只會待機與接收熱鍵。")
+            self.log("No scenes configured. Check config.json.")
 
     def _update_monitor_state(self) -> None:
         if self.start_hotkey.consume_press() and not self.is_monitoring:
-            self.is_monitoring = True
-            print("監控已開始。")
+            self.set_monitoring(True)
 
         if self.pause_hotkey.consume_press() and self.is_monitoring:
-            self.is_monitoring = False
-            print("監控已停止，程式維持待機。")
+            self.set_monitoring(False)
 
     def _process_scenes(self, sct: mss.mss, base_region: dict[str, int]) -> None:
         now = time.time()
 
         for scene in self.config.scenes:
+            if self._stop_requested or not self.is_monitoring:
+                return
+
             template = self.templates.get(scene)
             if template is None:
                 if self.config.debug:
-                    print(f"[SKIP] {scene.name}: 找不到模板 {scene.template_path}")
+                    self.log(f"[SKIP] {scene.name}: missing template {scene.template_path}")
                 continue
 
             current_region = to_absolute_region(base_region, scene.search_region)
@@ -98,7 +138,7 @@ class BotEngine:
             )
 
             if self.config.debug:
-                print(
+                self.log(
                     f"[DEBUG] {scene.name}: {score:.4f} "
                     f"mode={scene.match_mode} region={current_region}"
                 )
@@ -109,7 +149,7 @@ class BotEngine:
             if self._is_in_cooldown(scene, now):
                 continue
 
-            print(f"[HIT] {scene.name} score={score:.4f}")
+            self.log(f"[HIT] {scene.name} score={score:.4f}")
             execute_actions(scene.actions)
             self.last_trigger_times[scene.name] = time.time()
 
