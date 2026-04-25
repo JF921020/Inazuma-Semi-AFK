@@ -34,15 +34,7 @@ if errorlevel 1 (
     exit /b 1
 )
 
-if not exist "config.json" (
-    echo [ERROR] config.json not found.
-    pause
-    exit /b 1
-)
-
 echo Starting Inazuma Semi AFK...
-python "main.py"
+start "" ".venv\Scripts\pythonw.exe" "main.py"
 
-echo.
-echo Bot stopped.
-pause
+exit /b 0
