@@ -2,6 +2,3 @@
 __pycache__/
 *.pyc
 debug/
-portable_runtime/
-dist/
-portable_runtime.zip
