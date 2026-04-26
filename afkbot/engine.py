@@ -5,7 +5,7 @@ from pathlib import Path
 import mss
 import numpy as np
 
-from afkbot.actions import execute_actions
+from afkbot.actions import InputContext, execute_actions
 from afkbot.config import load_config
 from afkbot.hotkeys import HotkeyLatch, is_key_pressed
 from afkbot.models import AppConfig, SceneRule
@@ -42,6 +42,8 @@ class BotEngine:
         config: AppConfig,
         log: LogCallback | None = None,
         on_monitoring_changed: StateCallback | None = None,
+        input_mode: str = "foreground",
+        target_hwnd: int | None = None,
     ) -> None:
         self.config = config
         self.templates = TemplateCache()
@@ -52,6 +54,11 @@ class BotEngine:
         self._stop_requested = False
         self._log_callback = log or print
         self._on_monitoring_changed = on_monitoring_changed
+        self.input_context = InputContext(
+            mode=input_mode,
+            target_hwnd=target_hwnd,
+            log=self.log,
+        )
 
     def run(self) -> None:
         self._stop_requested = False
@@ -103,6 +110,10 @@ class BotEngine:
         self.log("Start hotkey: ALT+1")
         self.log("Pause hotkey: ALT+0")
         self.log(f"Stop hotkey: {self.config.stop_key}")
+        if self.input_context.use_background:
+            self.log(f"Input mode: background hwnd={self.input_context.target_hwnd}")
+        else:
+            self.log("Input mode: foreground")
         self.log("Waiting for start command.")
 
         if not self.config.scenes:
@@ -150,7 +161,7 @@ class BotEngine:
                 continue
 
             self.log(f"[HIT] {scene.name} score={score:.4f}")
-            execute_actions(scene.actions)
+            execute_actions(scene.actions, self.input_context)
             self.last_trigger_times[scene.name] = time.time()
 
     def _is_in_cooldown(self, scene: SceneRule, now: float) -> bool:
