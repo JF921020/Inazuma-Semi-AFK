@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="utf-8">
+    <title>{{ page_title }}</title>
+</head>
+<body>
+    <main>
+        <div class="page-header">
+            <h1>{{ page_title }}</h1>
+            <p>請選擇要讓掛機系統控制的視窗。</p>
+        </div>
+
+        <div class="window-list">
+            {% for window in windows %}
+                <div class="window-card">
+                    <h2>{{ window.title }}</h2>
+                    <p>視窗代號：{{ window.hwnd }}</p>
+
+                    <button>選擇這個視窗</button>
+                </div>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+
+</html>

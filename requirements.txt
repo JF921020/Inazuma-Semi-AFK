@@ -2,3 +2,7 @@ opencv-python
 numpy
 mss
 pydirectinput
+django
+win32gui
+win32process
+psutil
